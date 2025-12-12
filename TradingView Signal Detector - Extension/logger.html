@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+  
+  <!--
+  TradingView to MT5 Bridge - Logger Interface
+  
+  Copyright (c) 2025 Nishant P.Garg
+  Licensed under MIT License
+  
+  GitHub: https://github.com/niiisho/tradingview-mt5-bridge
+-->
+
+<head>
+  <meta charset="UTF-8">
+  <title>Trade Logger</title>
+  <style>
+    body { 
+      font-family: Arial, sans-serif; 
+      padding: 20px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    button { 
+      padding: 10px 16px; 
+      margin-right: 10px;
+      margin-bottom: 10px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    #createFile {
+      background: #2196F3;
+    }
+    #createFile:hover {
+      background: #0b7dda;
+    }
+    #status {
+      display: block;
+      padding: 8px 12px;
+      background: #f0f0f0;
+      border-radius: 4px;
+      font-size: 13px;
+      margin-top: 10px;
+      margin-bottom: 10px;
+    }
+    #log { 
+      margin-top: 20px; 
+      padding: 12px;
+      font-size: 13px; 
+      white-space: pre-wrap;
+      background: #1e1e1e;
+      color: #00ff00;
+      border-radius: 4px;
+      height: 400px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+    }
+    h2 {
+      color: #333;
+      margin-top: 0;
+    }
+    .warning {
+      background: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <h2>📊 TradingView Trade Logger</h2>
+  
+  <div class="warning">
+    ⚠️ <strong>Important:</strong> Keep this tab open while trading on TradingView
+  </div>
+
+  <div>
+    <button id="selectFile">Select Existing alerts.txt</button>
+  </div>
+  
+  <div id="status">No file selected</div>
+  <div id="log"></div>
+
+  <script src="logger.js"></script>
+</body>
+</html>
