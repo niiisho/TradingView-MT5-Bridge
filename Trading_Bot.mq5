@@ -1,7 +1,20 @@
-﻿//+------------------------------------------------------------------+
-//| FULL TRADING BOT - BUY/SELL/CLOSE ALL WORKING           |
+//+---------------------------------------------------------------------+
+//| TradingView to MT5 Bridge - Trading Bot                             |
+//| Copyright 2025, Nishant Prakash Garg                                |
+//| https://github.com/niiisho/TradingView-MT5-Bridge                   |
+//|                                                                     |
+//| Licensed under MIT License                                          |
+//| https://github.com/niiisho/TradingView-MT5-Bridge/blob/main/LICENSE |
+//+---------------------------------------------------------------------+
+
+
 //+------------------------------------------------------------------+
-#property copyright "2025"
+//| FULL TRADING BOT - BUY/SELL/CLOSE ALL WORKING                    |
+//+------------------------------------------------------------------+
+
+
+#property copyright "Copyright 2025, Nishant Prakash Garg"
+#property link      "https://github.com/niiisho/TradingView-MT5-Bridge"
 #property version   "4.0"
 #property strict
 
@@ -167,3 +180,4 @@ void ClearAlertFile()
    int handle = FileOpen(AlertFilePath, FILE_WRITE|FILE_TXT|FILE_ANSI, 0, CP_UTF8);
    if(handle != INVALID_HANDLE) FileClose(handle);
 }
+
