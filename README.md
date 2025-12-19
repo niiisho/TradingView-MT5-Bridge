@@ -318,7 +318,7 @@ MagicNumber = 12345         // Unique identifier for this EA
 - ✅ Ensure EA is attached to chart (smiley face visible)
 
 ### Duplicate Signals
-- ✅ Extension has scroll detection - shouldn't happen
+- ✅ **Dont't Scroll into "List of Trades" Tab**
 - ✅ Check if multiple instances of Python watcher running
 - ✅ Verify only one EA instance on chart
 
@@ -447,3 +447,4 @@ This is an **independent project** and is **not affiliated** with TradingView, M
 ```
 
 ***
+
