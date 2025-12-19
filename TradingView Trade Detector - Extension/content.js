@@ -21,7 +21,6 @@
   let containerObserver = null;
   let currentTradesContainer = null;
   let isRefreshing = false;
-  let isScrolling = false;
 
   // Function to find the trades list container
   function findTradesListContainer() {
@@ -116,62 +115,8 @@
     return isLikelyRefresh;
   }
 
-  function detectScrolling(mutations) {
-    // Scrolling typically adds/removes a small number of rows
-    let totalAdded = 0;
-    let totalRemoved = 0;
-
-    mutations.forEach(mutation => {
-      if (mutation.type === 'childList') {
-        totalAdded += mutation.addedNodes.length;
-        totalRemoved += mutation.removedNodes.length;
-      }
-    });
-
-    // Scroll usually adds 1-3 rows, not bulk changes
-    const isScroll = (totalAdded > 0 && totalAdded <= 5) && (totalRemoved <= 5);
-    return isScroll;
-  }
-
   // Mutation Observer callback for trades
   function handleMutations(mutations) {
-    const isScroll = detectScrolling(mutations);
-    if (isScroll) {
-      isScrolling = true;
-      console.log('📜 SCROLL DETECTED - Ignoring mutations');
-
-      // Process nodes silently (add to tracking without alerts)
-      mutations.forEach(mutation => {
-        if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-          mutation.addedNodes.forEach(node => {
-            if (node.nodeType === 1) {
-              const tradeId = node.textContent.trim();
-              if (!trackedTrades.has(tradeId)) {
-                trackedTrades.add(tradeId);
-              }
-              // Also check child rows
-              const tradeRows = node.querySelectorAll('tr, [class*="row"]');
-              tradeRows.forEach(row => {
-                const rowId = row.textContent.trim();
-                if (!trackedTrades.has(rowId)) {
-                  trackedTrades.add(rowId);
-                }
-              });
-            }
-          });
-        }
-      });
-
-      // Reset scroll flag after delay
-      setTimeout(() => {
-        isScrolling = false;
-        console.log('✅ Scroll complete');
-      }, 300);
-      return;
-    }
-
-
-
     // Check if this looks like a list refresh
     const isListRefresh = detectListRefresh(mutations);
 
@@ -371,3 +316,4 @@
   }
 
 })();
+
