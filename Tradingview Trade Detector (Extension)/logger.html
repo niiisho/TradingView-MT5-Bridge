@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Trading Bridge</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      width: 400px;
+      padding: 15px;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    
+    h1 {
+      font-size: 18px;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    
+    #status {
+      background: rgba(255,255,255,0.2);
+      padding: 10px;
+      border-radius: 5px;
+      text-align: center;
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+    
+    #log {
+      background: #1e1e1e;
+      color: #00ff00;
+      padding: 10px;
+      border-radius: 5px;
+      height: 200px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      white-space: pre-wrap;
+      border: 2px solid rgba(255,255,255,0.3);
+    }
+    
+    #log::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    #log::-webkit-scrollbar-track {
+      background: #2e2e2e;
+    }
+    
+    #log::-webkit-scrollbar-thumb {
+      background: #00ff00;
+      border-radius: 4px;
+    }
+    
+    .footer {
+      margin-top: 10px;
+      text-align: center;
+      font-size: 11px;
+      opacity: 0.8;
+    }
+  </style>
+</head>
+<body>
+  <h1>🚀 Trading Bridge</h1>
+  
+  <div id="status">⏳Trade LOGS in Tradngview.exe Dashboard</div>
+  
+  <div id="log"></div>
+  
+  <div class="footer">
+    Make sure TradingBridge.exe is running!
+  </div>
+  
+  <script src="logger.js"></script>
+</body>
+</html>
