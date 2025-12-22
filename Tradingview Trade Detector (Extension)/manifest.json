@@ -1,0 +1,27 @@
+{
+  "manifest_version": 3,
+  "name": "TradingView Bridge",
+  "version": "2.0",
+  "description": "Auto-execute TradingView trades on MT5",
+  
+  "content_scripts": [
+    {
+      "matches": ["*://*.tradingview.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  
+  "action": {
+    "default_popup": "logger.html",
+    "default_title": "Trading-Bridge Logger"
+  },
+  
+  "permissions": [],
+  
+  "host_permissions": [
+    "*://*.tradingview.com/*",
+    "http://localhost:8080/*",
+    "http://127.0.0.1:8080/*"
+  ]
+}
