@@ -48,7 +48,7 @@ TradingView Strategy Tester
 
 ## Installation & Setup Video
 - 3-minute full Installation & Setup Video of Trading-MT5-Bridge to automate Trades with Live Trade Example:
-  https://youtu.be/Op9VwIgxM8o?si=brjbbJYyLV2wVXxC
+  https://youtu.be/Op9VwIgxM8o
 
 ---
 
@@ -338,3 +338,4 @@ It helps others discover this free alternative to paid services.
 
 ### 🚨 Important Note
 This is an **independent project** and is **not affiliated** with TradingView, MetaQuotes, or MetaTrader 5.
+
