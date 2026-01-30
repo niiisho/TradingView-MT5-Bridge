@@ -276,6 +276,12 @@ https://github.com/niiisho/TradingView-MT5-Bridge/releases/v1.0.1
 
 
 The EXE source code is available upon request for developers who want to build/modify.  
+  
+Please email me with:  
+- Your intended use case  
+- How you found this project  
+- Your GitHub username
+    
 Contact: See [Support & Contact](#-support--contact) section below.
 
 ---
@@ -338,4 +344,5 @@ It helps others discover this free alternative to paid services.
 
 ### 🚨 Important Note
 This is an **independent project** and is **not affiliated** with TradingView, MetaQuotes, or MetaTrader 5.
+
 
