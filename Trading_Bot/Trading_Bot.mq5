@@ -22,9 +22,6 @@ input string ProcessedURL = "http://127.0.0.1:8080/signal/processed";
 CTrade trade;
 uint lastCheckTime = 0;
 
-//+------------------------------------------------------------------+
-//| Expert initialization                                             |
-//+------------------------------------------------------------------+
 int OnInit()
 {
    trade.SetExpertMagicNumber(MagicNumber);
@@ -38,9 +35,6 @@ int OnInit()
    return(INIT_SUCCEEDED);
 }
 
-//+------------------------------------------------------------------+
-//| Clear old signals on EA startup                                   |
-//+------------------------------------------------------------------+
 void ClearOldSignalsOnStartup()
 {
    // First, check if there's an old signal
@@ -71,9 +65,6 @@ void ClearOldSignalsOnStartup()
    }
 }
 
-//+------------------------------------------------------------------+
-//| Expert tick function                                              |
-//+------------------------------------------------------------------+
 void OnTick()
 {
     uint CheckIntervalMs = 750;
@@ -102,9 +93,6 @@ void OnTick()
 }
 
 
-//+------------------------------------------------------------------+
-//| Get signal from server with status flag                          |
-//+------------------------------------------------------------------+
 bool GetSignalFromServer(string &signal, string &status)
 {
     char data[];
@@ -138,9 +126,7 @@ bool GetSignalFromServer(string &signal, string &status)
     return false;
 }
 
-//+------------------------------------------------------------------+
-//| Mark signal as processed on server                               |
-//+------------------------------------------------------------------+
+
 void MarkSignalProcessed()
 {
     char data[];
@@ -157,9 +143,7 @@ void MarkSignalProcessed()
     }
 }
 
-//+------------------------------------------------------------------+
-//| Simple JSON value parser (MQL5 compatible!)                      |
-//+------------------------------------------------------------------+
+
 string ParseJSONValue(string json, string key)
 {
     // Find: "key":"value" or "key": "value"
@@ -205,9 +189,7 @@ string ParseJSONValue(string json, string key)
     return StringSubstr(json, startPos, endPos - startPos);
 }
 
-//+------------------------------------------------------------------+
-//| Process alert and execute trade                                  |
-//+------------------------------------------------------------------+
+
 void ProcessAlert(string alert)
 {
    if(PositionsTotal() > 0)
@@ -216,12 +198,10 @@ void ProcessAlert(string alert)
       return;
    }
    
-   // Parse SL/TP/LOT
    int sl_pips = StopLossPoints;
    int tp_pips = TakeProfitPoints;
    double lot_size = LotSize;
    
-   // Extract SL
    int sl_start = StringFind(alert, "SL=");
    if(sl_start >= 0)
    {
@@ -232,7 +212,6 @@ void ProcessAlert(string alert)
       sl_pips = (int)StringToInteger(sl_str);
    }
    
-   // Extract TP
    int tp_start = StringFind(alert, "TP=");
    if(tp_start >= 0)
    {
@@ -243,7 +222,6 @@ void ProcessAlert(string alert)
       tp_pips = (int)StringToInteger(tp_str);
    }
    
-   // Extract LOT
    int lot_start = StringFind(alert, "LOT=");
    if(lot_start >= 0)
    {
@@ -258,8 +236,8 @@ void ProcessAlert(string alert)
    double min_lot = SymbolInfoDouble(Symbol(), SYMBOL_VOLUME_MIN);
    double max_lot = SymbolInfoDouble(Symbol(), SYMBOL_VOLUME_MAX);
    lot_size = MathMax(min_lot, MathMin(max_lot, lot_size));
-   
-   // Execute BUY or SELL
+
+
    if(StringFind(alert, "BUY") >= 0)
    {
       OpenBuyOrder(Symbol(), lot_size, sl_pips, tp_pips);
@@ -273,9 +251,7 @@ void ProcessAlert(string alert)
    }
 }
 
-//+------------------------------------------------------------------+
-//| Open Buy Order                                                    |
-//+------------------------------------------------------------------+
+
 void OpenBuyOrder(string symbol, double lot, int sl_pips, int tp_pips)
 {
    ClosePositionsByType(symbol, POSITION_TYPE_SELL);
@@ -291,9 +267,7 @@ void OpenBuyOrder(string symbol, double lot, int sl_pips, int tp_pips)
       Print("❌ BUY FAILED: ", trade.ResultRetcode());
 }
 
-//+------------------------------------------------------------------+
-//| Open Sell Order                                                   |
-//+------------------------------------------------------------------+
+
 void OpenSellOrder(string symbol, double lot, int sl_pips, int tp_pips)
 {
    ClosePositionsByType(symbol, POSITION_TYPE_BUY);
@@ -309,9 +283,7 @@ void OpenSellOrder(string symbol, double lot, int sl_pips, int tp_pips)
       Print("❌ SELL FAILED: ", trade.ResultRetcode());
 }
 
-//+------------------------------------------------------------------+
-//| Close positions by type                                          |
-//+------------------------------------------------------------------+
+
 void ClosePositionsByType(string symbol, ENUM_POSITION_TYPE type)
 {
    for(int i = PositionsTotal()-1; i >= 0; i--)
