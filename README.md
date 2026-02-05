@@ -139,7 +139,7 @@ if (buyCondition)
     lot_size = calculated_lot_size
     
     // Format entry name with SL/TP/LOT
-    entry_name = "BUY SL=" + str.tostring(sl_pips) + " TP=" + str.tostring(tp_pips) + " LOT=" + str.tostring(lot_size)
+    entry_name = " BUY SL=" + str.tostring(sl_pips) + " TP=" + str.tostring(tp_pips) + " LOT=" + str.tostring(lot_size) + " "
     
     strategy.entry(entry_name, strategy.long, qty=lot_size)
 ```
@@ -344,5 +344,6 @@ It helps others discover this free alternative to paid services.
 
 ### 🚨 Important Note
 This is an **independent project** and is **not affiliated** with TradingView, MetaQuotes, or MetaTrader 5.
+
 
 
