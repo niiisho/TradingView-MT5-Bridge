@@ -3,116 +3,233 @@
 
 console.log('TradingView Trade Detector: Extension loaded');
 
-// Track existing trades to detect new ones
 let trackedTrades = new Set();
 let tradesObserver = null;
 let containerObserver = null;
 let currentTradesContainer = null;
 let isRefreshing = false;
+let domInspected = false;
 
 const alertShown = {};
-const RESET_DELAY = 5000; // Reset after 3 seconds
+const RESET_DELAY = 5000;
+
+// Dedup guard: ignore identical signal within 1 second
+let lastSignalKey = null;
+let lastSignalTime = 0;
 
 function logOnce(message, key) {
     console.log(message);
-    // If alert already shown for this key, skip
-    if (alertShown[key]) {
-        return;
-    }
-
-    // Show alert
+    if (alertShown[key]) return;
     alertShown[key] = true;
     alert(message);
-
-    // Reset flag after delay so user can see it again if issue persists
-    setTimeout(() => {
-        alertShown[key] = false;
-    }, RESET_DELAY);
+    setTimeout(() => { alertShown[key] = false; }, RESET_DELAY);
 }
 
-// NEW: Send directly to server
+// Broadcast a log entry to the popup (if open) and persist it
+function broadcastLog(text) {
+    const entry = { text, time: new Date().toLocaleTimeString() };
+
+    // Live update to popup if it's open
+    chrome.runtime.sendMessage({ type: 'log', entry }).catch(() => {});
+
+    // Persist last 50 entries for when popup opens later
+    chrome.storage.local.get({ logs: [] }, ({ logs }) => {
+        logs.push(entry);
+        if (logs.length > 50) logs.splice(0, logs.length - 50);
+        chrome.storage.local.set({ logs });
+    });
+}
+
 async function sendToServer(tradeInfo) {
     const signal = extractSignal(tradeInfo);
     if (signal === 'UNKNOWN') {
-        console.log('⚠️ No valid signal extracted');
+        console.log('⚠️ No valid signal extracted from:', tradeInfo.fullText.slice(0, 80));
         return;
     }
+
+    // Suppress identical signal fired within 1 second (subtree observer artifact)
+    const now = Date.now();
+    if (signal === lastSignalKey && now - lastSignalTime < 1000) {
+        console.log('⏭️ Duplicate signal suppressed:', signal);
+        return;
+    }
+    lastSignalKey = signal;
+    lastSignalTime = now;
+
+    console.log('📤 Sending signal:', signal);
+    broadcastLog(`📤 ${signal}`);
 
     try {
         const response = await fetch('http://localhost:8080/signal', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                signal: signal,
-                timestamp: new Date().toISOString()
-            })
+            body: JSON.stringify({ signal, timestamp: new Date().toISOString() })
         });
-
         if (!response.ok) {
+            broadcastLog('❌ Server error');
             logOnce('❌ Server error - TradingBridge may not be responding properly', 'server_error');
+        } else {
+            broadcastLog(`✅ Signal sent: ${signal}`);
         }
-    } catch (error) {
+    } catch {
+        broadcastLog('❌ Server offline');
         logOnce('❌ Server offline - Please start TradingBridge.exe', 'server_offline');
     }
 }
 
-// NEW: Extract signal from trade data
 function extractSignal(tradeInfo) {
     const fullText = tradeInfo.fullText || '';
 
-    // Try full pattern: BUY/SELL SL=X TP=Y LOT=Z
-    const fullPattern = /\b(BUY|SELL)\s+SL=([\d.]+)\s+TP=([\d.]+)\s+LOT=([\d.]+)\b/i;
-    const fullMatch = fullText.match(fullPattern);
-    if (fullMatch) {
-        return fullMatch[0];
-    }
+    const fullMatch = fullText.match(/\b(BUY|SELL)\s+SL=([\d.]+)\s+TP=([\d.]+)\s+LOT=([\d.]+)\b/i);
+    if (fullMatch) return fullMatch[0];
 
-    // Fallback: Just BUY or SELL
-    const sidePattern = /\b(BUY|SELL)\b/i;
-    const sideMatch = fullText.match(sidePattern);
-    if (sideMatch) {
-        return sideMatch[0].toUpperCase();
-    }
+    const sideMatch = fullText.match(/\b(BUY|SELL)\b/i);
+    if (sideMatch) return sideMatch[0].toUpperCase();
 
-    // Fallback: Long/Short
-    if (fullText.toLowerCase().includes('long')) return 'BUY';
-    if (fullText.toLowerCase().includes('short')) return 'SELL';
+    const lower = fullText.toLowerCase();
+    if (lower.includes('long')) return 'BUY';
+    if (lower.includes('short')) return 'SELL';
 
     return 'UNKNOWN';
 }
 
-function findTradesListContainer() {
-    // TRY SPECIFIC SELECTOR FIRST (works on both PCs)
-    const specificRows = document.querySelectorAll('tr.ka-tr.ka-row');
-    if (specificRows.length > 0) {
-        // Find parent container
-        const container = specificRows[0].closest('tbody') || 
-                         specificRows[0].closest('[class*="tbody"]') ||
-                         specificRows[0].parentElement;
-        if (container) {
-            console.log('✅ Found container using specific selector tr.ka-tr.ka-row');
-            return container;
+function inspectContainerOnce(container) {
+    if (domInspected) return;
+    domInspected = true;
+
+    console.log('🔍 DOM INSPECTOR - Container:', container.tagName, container.className);
+    const { children } = container;
+    if (!children.length) { console.log('🔍 Container has no children yet'); return; }
+
+    console.log(`🔍 Child[0]: <${children[0].tagName}> "${children[0].className}"`);
+    if (children.length > 1)
+        console.log(`🔍 Child[1]: <${children[1].tagName}> "${children[1].className}"`);
+
+    const grandchildren = children[0].children;
+    if (grandchildren.length)
+        console.log(`🔍 Grandchild[0]: <${grandchildren[0].tagName}> "${grandchildren[0].className}"`);
+}
+
+function isTradeRow(node) {
+    if (node.nodeType !== 1) return false;
+    if (node.textContent.trim().length < 5) return false;
+    if (node.tagName === 'TR') return true;
+    return node.querySelectorAll('td, [class*="cell"]').length >= 2;
+}
+
+function extractTradeInfo(el) {
+    return {
+        timestamp: new Date().toISOString(),
+        fullText: el.textContent.trim(),
+        cells: Array.from(el.querySelectorAll('td, [class*="cell"]')).map(c => c.textContent.trim())
+    };
+}
+
+function processTrade(node) {
+    if (!isTradeRow(node)) return false;
+
+    const tradeId = node.textContent.trim();
+    if (!tradeId) return false;
+
+    if (trackedTrades.has(tradeId)) return false;
+
+    trackedTrades.add(tradeId);
+
+    if (!isRefreshing) {
+        console.log('🆕 New trade:', tradeId.slice(0, 80));
+        sendToServer(extractTradeInfo(node));
+        return true;
+    }
+
+    return false;
+}
+
+function detectListRefresh(mutations) {
+    let removed = 0, added = 0;
+    for (const m of mutations) {
+        if (m.type === 'childList') { removed += m.removedNodes.length; added += m.addedNodes.length; }
+    }
+    return removed > 4 && added > 4;
+}
+
+function handleMutations(mutations) {
+    const isListRefresh = detectListRefresh(mutations);
+
+    if (isListRefresh) {
+        isRefreshing = true;
+        console.log('🔄 LIST REFRESH DETECTED');
+        trackedTrades.clear();
+    }
+
+    for (const mutation of mutations) {
+        if (mutation.type !== 'childList') continue;
+
+        for (const node of mutation.removedNodes) {
+            if (node.nodeType === 1 && !isRefreshing)
+                trackedTrades.delete(node.textContent.trim());
+        }
+
+        for (const node of mutation.addedNodes) {
+            if (node.nodeType !== 1) continue;
+
+            // Only process nodes that are direct children of the container,
+            // or <tr> elements anywhere inside it.
+            // Skipping deep descendants avoids re-firing when subtree:true
+            // generates separate mutation records for cells/spans within a row.
+            if (node.parentElement === currentTradesContainer) {
+                processTrade(node);
+            } else if (node.tagName === 'TR' && node.closest && node.closest('tbody, [class*="tbody"]') === currentTradesContainer) {
+                processTrade(node);
+            }
+            // Also catch a wrapper div added directly to the container
+            // that itself contains trade rows
+            if (node.parentElement === currentTradesContainer) {
+                node.querySelectorAll('tr').forEach(r => processTrade(r));
+            }
         }
     }
 
-    // FALLBACK: Original generic selectors
-    const possibleSelectors = [
-        '[class*="list-"]',
-        '[class*="trades"]',
-        '[data-name="list-of-trades"]',
-        '.tv-data-table__tbody',
-        '[class*="tbody"]'
-    ];
+    if (isListRefresh) {
+        setTimeout(() => {
+            isRefreshing = false;
+            console.log(`✅ Refresh complete. Tracking ${trackedTrades.size} trades`);
+        }, 750);
+    }
+}
 
-    for (const selector of possibleSelectors) {
-        const elements = document.querySelectorAll(selector);
-        for (const element of elements) {
-            // Check if this looks like the trades list
-            if (element.querySelector('[class*="trade"]') ||
-                element.textContent.includes('Trade') ||
-                element.closest('[class*="strategy-tester"]')) {
-                console.log('✅ Found container using fallback selector:', selector);
-                return element;
+function findTradesListContainer() {
+    // Priority 1: known stable row selector
+    const kaRows = document.querySelectorAll('tr.ka-tr.ka-row');
+    if (kaRows.length) {
+        const c = kaRows[0].closest('tbody') ||
+                  kaRows[0].closest('[class*="tbody"]') ||
+                  kaRows[0].parentElement;
+        if (c) { console.log('✅ Container: tr.ka-tr.ka-row'); return c; }
+    }
+
+    // Priority 2: data-name attribute
+    const byName = document.querySelector('[data-name="list-of-trades"]');
+    if (byName) { console.log('✅ Container: data-name'); return byName; }
+
+    // Priority 3: tbody inside strategy tester / backtesting panels
+    const panel = document.querySelector('[class*="strategy-tester"], [class*="backtesting"]');
+    if (panel) {
+        const tbody = panel.querySelector('tbody, [class*="tbody"], [class*="body"]');
+        if (tbody) { console.log('✅ Container: strategy-tester tbody', tbody.className); return tbody; }
+    }
+
+    // Priority 4: generic fallbacks
+    for (const selector of [
+        '[class*="list-of-trades"]', '[class*="listOfTrades"]', '[class*="trades-list"]',
+        '.tv-data-table__tbody', '[class*="tbody"]', '[class*="trades"]', '[class*="list-"]'
+    ]) {
+        for (const el of document.querySelectorAll(selector)) {
+            if (el.querySelector('[class*="trade"]') ||
+                el.textContent.includes('Trade') ||
+                el.closest('[class*="strategy-tester"]') ||
+                el.closest('[class*="backtesting"]')) {
+                console.log('✅ Container via fallback:', selector, el.className);
+                return el;
             }
         }
     }
@@ -120,204 +237,70 @@ function findTradesListContainer() {
     return null;
 }
 
-// Function to extract trade information
-function extractTradeInfo(tradeElement) {
-    const text = tradeElement.textContent;
-    const cells = tradeElement.querySelectorAll('td, div[class*="cell"]');
-
-    const tradeInfo = {
-        timestamp: new Date().toISOString(),
-        fullText: text.trim(),
-        cells: Array.from(cells).map(cell => cell.textContent.trim())
-    };
-
-    return tradeInfo;
-}
-
-// Function to process new trades
-function processTrade(tradeElement) {
-    const tradeId = tradeElement.textContent.trim();
-
-    if (!trackedTrades.has(tradeId) && !isRefreshing) {
-        trackedTrades.add(tradeId);
-        const tradeInfo = extractTradeInfo(tradeElement);
-        sendToServer(tradeInfo);
-        return true;
-    } else if (!trackedTrades.has(tradeId) && isRefreshing) {
-        trackedTrades.add(tradeId);
-    }
-
-    return false;
-}
-
-// Detect if this is a list refresh (bulk removal + bulk addition)
-function detectListRefresh(mutations) {
-    let totalRemoved = 0;
-    let totalAdded = 0;
-
-    mutations.forEach(mutation => {
-        if (mutation.type === 'childList') {
-            totalRemoved += mutation.removedNodes.length;
-            totalAdded += mutation.addedNodes.length;
-        }
-    });
-
-    const isLikelyRefresh = (totalRemoved > 4 && totalAdded > 4);
-    return isLikelyRefresh;
-}
-
-// Mutation Observer callback for trades
-function handleMutations(mutations) {
-    const isListRefresh = detectListRefresh(mutations);
-
-    if (isListRefresh) {
-        isRefreshing = true;
-        console.log('🔄 LIST REFRESH DETECTED (Date range change or strategy update)');
-        trackedTrades.clear();
-    }
-
-    mutations.forEach(mutation => {
-        if (mutation.type === 'childList' && mutation.removedNodes.length > 0) {
-            mutation.removedNodes.forEach(node => {
-                if (node.nodeType === 1) {
-                    const tradeId = node.textContent.trim();
-                    if (trackedTrades.has(tradeId) && !isRefreshing) {
-                        trackedTrades.delete(tradeId);
-                    }
-                }
-            });
-        }
-
-        if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-            mutation.addedNodes.forEach(node => {
-                if (node.nodeType === 1) {
-                    if (node.matches && (
-                        node.matches('tr') ||
-                        node.matches('[class*="row"]') ||
-                        node.matches('[class*="trade"]')
-                    )) {
-                        processTrade(node);
-                    }
-
-                    const tradeRows = node.querySelectorAll('tr, [class*="row"]');
-                    tradeRows.forEach(row => processTrade(row));
-                }
-            });
-        }
-    });
-
-    if (isListRefresh) {
-        setTimeout(() => {
-            isRefreshing = false;
-            console.log(`✅ Refresh complete. Now tracking ${trackedTrades.size} trades`);
-        }, 750);
-    }
+function reset() {
+    if (tradesObserver) { tradesObserver.disconnect(); tradesObserver = null; }
+    currentTradesContainer = null;
+    trackedTrades.clear();
+    isRefreshing = false;
+    domInspected = false;
 }
 
 function monitorContainerRemoval(container) {
-    if (containerObserver) {
-        containerObserver.disconnect();
-    }
+    if (containerObserver) containerObserver.disconnect();
 
     const parent = container.parentNode;
     if (!parent) return;
 
-    containerObserver = new MutationObserver(function (mutations) {
-        mutations.forEach(function (mutation) {
-            if (mutation.type === 'childList' && mutation.removedNodes.length > 0) {
-                mutation.removedNodes.forEach(function (removedNode) {
-                    if (removedNode === container || removedNode.contains(container)) {
-                        console.log('🚫 TRADES TAB REMOVED!');
-                        if (tradesObserver) {
-                            tradesObserver.disconnect();
-                            tradesObserver = null;
-                        }
-
-                        currentTradesContainer = null;
-                        trackedTrades.clear();
-                        isRefreshing = false;
-                        setTimeout(reinitialize, 2000);
-                    }
-                });
+    containerObserver = new MutationObserver(mutations => {
+        for (const m of mutations) {
+            for (const removed of m.removedNodes) {
+                if (removed === container || removed.contains(container)) {
+                    console.log('🚫 Trades container removed');
+                    reset();
+                    setTimeout(initObserver, 2000);
+                    return;
+                }
             }
-        });
-    });
-
-    containerObserver.observe(parent, {
-        childList: true,
-        subtree: false
-    });
-}
-
-function monitorDocumentLevel(container) {
-    const documentObserver = new MutationObserver(function (mutations) {
-        if (!document.body.contains(container)) {
-            console.log('🚫 TRADES TAB REMOVED FROM DOCUMENT!');
-            if (tradesObserver) {
-                tradesObserver.disconnect();
-                tradesObserver = null;
-            }
-
-            documentObserver.disconnect();
-            currentTradesContainer = null;
-            trackedTrades.clear();
-            isRefreshing = false;
-            setTimeout(reinitialize, 2000);
         }
     });
 
-    documentObserver.observe(document.body, {
-        childList: true,
-        subtree: true
-    });
+    // subtree:false on the direct parent is sufficient and much cheaper
+    // than observing document.body with subtree:true
+    containerObserver.observe(parent, { childList: true, subtree: false });
 }
 
 function initObserver() {
-    const tradesContainer = findTradesListContainer();
+    const container = findTradesListContainer();
 
-    if (tradesContainer && tradesContainer !== currentTradesContainer) {
-        currentTradesContainer = tradesContainer;
-        console.log('✅ Trades list container found, starting observer...');
-
-        const existingTrades = tradesContainer.querySelectorAll('tr, [class*="row"]');
-        existingTrades.forEach(trade => {
-            const tradeId = trade.textContent.trim();
-            if (tradeId) {
-                trackedTrades.add(tradeId);
-            }
-        });
-
-        tradesObserver = new MutationObserver(handleMutations);
-
-        const config = {
-            childList: true,
-            subtree: true,
-            attributes: false,
-            characterData: false
-        };
-
-        tradesObserver.observe(tradesContainer, config);
-        console.log('👀 Observer active - monitoring for new trades...');
-
-        monitorContainerRemoval(tradesContainer);
-        monitorDocumentLevel(tradesContainer);
-
-        return tradesObserver;
-    } else if (!tradesContainer) {
+    if (!container) {
         console.log('⚠️ Trades list not found yet. Retrying in 2 seconds...');
         setTimeout(initObserver, 2000);
+        return;
     }
-}
 
-function reinitialize() {
-    console.log('🔄 Attempting to reinitialize trade detector...');
-    initObserver();
+    if (container === currentTradesContainer) return;
+
+    currentTradesContainer = container;
+    console.log('✅ Trades list container found, starting observer...');
+    inspectContainerOnce(container);
+
+    // Seed existing trades so they aren't fired as new
+    const seed = new Set();
+    container.querySelectorAll('tr').forEach(r => { const id = r.textContent.trim(); if (id) seed.add(id); });
+    Array.from(container.children).forEach(c => { const id = c.textContent.trim(); if (id) seed.add(id); });
+    trackedTrades = seed;
+    console.log(`📋 Seeded ${trackedTrades.size} existing trades`);
+
+    tradesObserver = new MutationObserver(handleMutations);
+    tradesObserver.observe(container, { childList: true, subtree: true, attributes: false, characterData: false });
+    console.log('👀 Observer active');
+
+    monitorContainerRemoval(container);
+    broadcastLog('👀 Observer active on trades list');
 }
 
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        setTimeout(initObserver, 1000);
-    });
+    document.addEventListener('DOMContentLoaded', () => setTimeout(initObserver, 1000));
 } else {
     setTimeout(initObserver, 1000);
 }

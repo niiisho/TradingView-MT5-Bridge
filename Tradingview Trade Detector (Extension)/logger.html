@@ -4,80 +4,75 @@
   <meta charset="UTF-8">
   <title>Trading Bridge</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
     body {
-      width: 400px;
-      padding: 15px;
+      width: 380px;
+      padding: 12px;
       font-family: 'Segoe UI', Arial, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
+      background: #1a1a2e;
+      color: #e0e0e0;
     }
-    
+
     h1 {
-      font-size: 18px;
-      margin-bottom: 10px;
+      font-size: 15px;
       text-align: center;
+      margin-bottom: 10px;
+      color: #fff;
+      letter-spacing: 1px;
     }
-    
+
     #status {
-      background: rgba(255,255,255,0.2);
-      padding: 10px;
+      padding: 7px 10px;
       border-radius: 5px;
       text-align: center;
-      margin-bottom: 10px;
+      font-size: 13px;
       font-weight: bold;
+      margin-bottom: 10px;
     }
-    
+
+    #status.online  { background: #1a3a1a; color: #4cff72; border: 1px solid #2d6e2d; }
+    #status.offline { background: #3a1a1a; color: #ff5c5c; border: 1px solid #6e2d2d; }
+
     #log {
-      background: #1e1e1e;
-      color: #00ff00;
-      padding: 10px;
+      background: #0d0d0d;
+      color: #00e676;
+      padding: 8px;
       border-radius: 5px;
-      height: 200px;
+      height: 210px;
       overflow-y: auto;
       font-family: 'Courier New', monospace;
-      font-size: 12px;
-      white-space: pre-wrap;
-      border: 2px solid rgba(255,255,255,0.3);
-    }
-    
-    #log::-webkit-scrollbar {
-      width: 8px;
-    }
-    
-    #log::-webkit-scrollbar-track {
-      background: #2e2e2e;
-    }
-    
-    #log::-webkit-scrollbar-thumb {
-      background: #00ff00;
-      border-radius: 4px;
-    }
-    
-    .footer {
-      margin-top: 10px;
-      text-align: center;
       font-size: 11px;
-      opacity: 0.8;
+      border: 1px solid #2a2a2a;
     }
+
+    #log div { margin-bottom: 2px; word-break: break-all; }
+
+    #log::-webkit-scrollbar       { width: 6px; }
+    #log::-webkit-scrollbar-track { background: #1a1a1a; }
+    #log::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
+
+    #clear-btn {
+      display: block;
+      width: 100%;
+      margin-top: 8px;
+      padding: 6px;
+      background: #2a2a3e;
+      color: #aaa;
+      border: 1px solid #3a3a5e;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    #clear-btn:hover { background: #3a3a5e; color: #fff; }
   </style>
 </head>
 <body>
   <h1>🚀 Trading Bridge</h1>
-  
-  <div id="status">⏳Trade LOGS in Tradngview.exe Dashboard</div>
-  
+  <div id="status" class="offline">🔴 Checking...</div>
   <div id="log"></div>
-  
-  <div class="footer">
-    Make sure TradingBridge.exe is running!
-  </div>
-  
+  <button id="clear-btn">Clear Logs</button>
   <script src="logger.js"></script>
 </body>
 </html>
