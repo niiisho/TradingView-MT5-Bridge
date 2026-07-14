@@ -9,6 +9,21 @@
 
 ---
 
+## ⚠️ RISK WARNING — READ BEFORE USE
+
+This software executes real trades on your broker account automatically. Automated trading carries significant financial risk. You can lose your entire account balance, including amounts beyond your initial deposit if your broker offers leverage.
+
+- The author is NOT responsible for any financial losses, account liquidations, margin calls, or damages of any kind resulting from use of this software.
+- This is NOT financial advice and NOT a trading strategy. It is a technical automation tool only.
+- Past performance in TradingView's Strategy Tester does NOT guarantee future results on a live account.
+- Slippage, broker requotes, network latency, and platform outages can cause execution to differ significantly from what the backtester shows.
+- Verify that automated/algorithmic trading is permitted by your broker's Terms of Service before use.
+- Always test on a demo account first. Even after demo testing, live results may differ substantially.
+
+By using this software, you accept full and sole responsibility for all trading decisions and their financial consequences.
+
+---
+
 ## 🌟 Why This Project is Different
 
 ### ✨ **ABSOLUTELY FREE - NO TRADINGVIEW PREMIUM NEEDED!**
@@ -70,6 +85,7 @@ TradingView Strategy Tester
 - **Chrome** browser
 - **MetaTrader 5**
 - **TradingView** Free account (no premium needed!)
+- **Broker permission** — Confirm your broker's Terms of Service allows automated/algorithmic trading before live use
 
 ---
 
@@ -225,7 +241,7 @@ TakeProfitPoints=100
 ## ❓ FAQ
 
 **Q: Does this work with live trading?**
-A: Yes! But always test on demo first.
+A: It can connect to a live account technically. However, all financial losses on live accounts are entirely your responsibility. Do not use on a live account until you have tested thoroughly on demo and fully understand the behavior. Live execution conditions differ from backtesting.
 
 **Q: Can I modify SL/TP after trade opens?**
 A: Yes, But Recommended to modify before attaching to chart.
@@ -247,9 +263,21 @@ A: One instance per symbol recommended.
 
 ---
 
-## ⚠️ Disclaimer
+## ⚠️ Disclaimer and Legal Notice
 
-**Educational use only. Test on demo first!**
+This software is provided for educational and personal use only. It is a technical bridge tool and does not constitute financial advice, investment advice, or a recommendation to trade any financial instrument.
+
+**Financial Risk:** Automated trading involves substantial risk of financial loss. You may lose more than your initial investment. The author, contributors, and distributors of this software bear no responsibility for any direct, indirect, incidental, special, or consequential financial losses, account liquidations, or damages of any kind arising from the use or misuse of this software.
+
+**No Warranty:** This software is provided "as is" without any warranty of any kind, express or implied. There is no guarantee of accuracy, reliability, fitness for a particular purpose, or uninterrupted operation. Trade execution latency, slippage, broker-side rejections, and software bugs may cause trades to execute differently than expected or not at all.
+
+**Not Financial Advice:** Nothing in this software, its documentation, or any associated communications constitutes financial advice. All trading decisions are solely your own responsibility.
+
+**Regulatory Compliance:** It is your responsibility to ensure that your use of automated trading software complies with applicable laws, regulations, and your broker's Terms of Service in your jurisdiction. The author makes no representation that this software is legal or permissible in any specific jurisdiction.
+
+**Backtesting vs Live Trading:** Results shown in TradingView's Strategy Tester do not guarantee identical results on a live account. Live markets involve spread, slippage, and execution conditions not replicated in backtesting.
+
+By downloading, installing, or using this software in any form, you acknowledge that you have read, understood, and agreed to this disclaimer in full.
 
 ---
 
@@ -261,31 +289,7 @@ A: One instance per symbol recommended.
 ✅ Production waitress server  
 ✅ Duplicate/Rapid Trades Handling  
 
-
 ---
-
-
-## 🔄 File-Based Bridge (Old Version)
-
-For the older file-based bridge using Alerts.txt, see previous releases:  
-https://github.com/niiisho/TradingView-MT5-Bridge/releases/v1.0.1
-
----
-
-## 👨‍💻 For Developers
-
-
-The EXE source code is available upon request for developers who want to build/modify.  
-  
-Please email me with:  
-- Your intended use case  
-- How you found this project  
-- Your GitHub username
-    
-Contact: See [Support & Contact](#-support--contact) section below.
-
----
-
 
 ## 📝 License
 
@@ -298,8 +302,7 @@ Contact: See [Support & Contact](#-support--contact) section below.
 
 ✅ **FREE for personal/educational use**   
 ✅ **Commercial use allowed** (with attribution)   
-⚠️ **MUST include** copyright notice and LICENSE file   
-🙏 **Star the repo** if you find it useful!  
+⚠️ **MUST include** copyright notice and LICENSE file    
 
 ---
 
@@ -321,8 +324,7 @@ Contributions welcome! Please:
 - 🐛 Open an issue  
 - 💬 Check existing issues first 
 
-**Commercial Support:**  
-- 💼 Custom features & modifications  
+**Commercial Support:**   
 - 🛠️ Installation assistance  
 - 📞 Contact: contactme.ngone@gmail.com 
 
@@ -337,13 +339,8 @@ It helps others discover this free alternative to paid services.
 ---
 
 **Built with ❤️ by Nishant P.Garg**  
-
-**© 2025 Nishant Prakash Garg. Released under MIT License.**  
  
 ---
 
 ### 🚨 Important Note
 This is an **independent project** and is **not affiliated** with TradingView, MetaQuotes, or MetaTrader 5.
-
-
-
