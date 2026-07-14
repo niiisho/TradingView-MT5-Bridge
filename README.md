@@ -186,14 +186,19 @@ Fallback: "long"→BUY, "short"→SELL
 
 ```
 tradingview-mt5-bridge/
-├── TradingBridge.exe                                  # HTTP server
-├── TradingBot.mq5                                     # MT5 EA 
-├── TradingBot.ex5
-└── TradingView Trade Detector - Extension/            # Chrome extension
-    ├── manifest.json
-    ├── content.js
-    ├── logger.html
-    └── logger.js
+├── TradingBridge.exe                                  # HTTP server (pre-built)
+├── Bridge_Source/                                     # Python source for the server
+│   └── bridge_server.py
+├── Trading_Bot/                                       # MT5 EA
+│   ├── TradingBot.mq5
+│   └── TradingBot.ex5
+├── Tradingview Trade Detector (Extension)/            # Chrome extension
+│   ├── manifest.json
+│   ├── content.js
+│   ├── logger.html
+│   └── logger.js
+├── DISCLAIMER.md
+└── LICENSE
 ```
 
 ---
@@ -281,13 +286,12 @@ By downloading, installing, or using this software in any form, you acknowledge 
 
 ---
 
-## 📈 v2.0.0 Updates
+## 📈 v2.0.1 Updates
 
-
-✅ HTTP bridge (no files!)  
-✅ Signal rejection protection  
-✅ Production waitress server  
-✅ Duplicate/Rapid Trades Handling  
+✅ Improved bridge server UI  
+✅ Bug fixes and stability improvements  
+✅ Python source code now included in repo  
+✅ Expanded disclaimer and risk documentation  
 
 ---
 
